@@ -39,8 +39,12 @@ sys_kill(void)
 int
 sys_sendkill(void)
 {
-  cprintf("hello there!\n");
-  return 0;
+  int pid, signum;
+  argint(0, &pid);
+  argint(1, &signum);
+  if(pid < 0)
+    return -1;
+  return sendkill(pid, signum);
 }
 
 int
