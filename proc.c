@@ -504,8 +504,12 @@ sendkill(int pid, int signum)
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){
-      // 
-      // p->killed = 1;
+      if(signum == SIGKILL || signum == SIGINT){
+        p->killed = 1;
+      }
+      else{
+        p->psignals[signum] = 1; //For other signals
+      }
       // Wake process from sleep if necessary.
       if(p->state == SLEEPING)
         p->state = RUNNABLE;
