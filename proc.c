@@ -521,6 +521,12 @@ sendkill(int pid, int signum)
   return -1;
 }
 
+
+int signal(int signum, sighandler_t handler)
+{
+  struct proc *curproc = myproc();
+  curproc->handler[signum] = handler;
+}
 //PAGEBREAK: 36
 // Print a process listing to console.  For debugging.
 // Runs when user types ^P on console.
