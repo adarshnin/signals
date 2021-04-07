@@ -528,6 +528,28 @@ int signal(int signum, sighandler_t handler)
   curproc->handlers[signum] = handler;
   return 0;
 }
+
+void check_pending_signal(void){
+  struct proc *curproc = myproc();
+  int i;
+  //check pending signals
+  for(i = 0; i < NSIG; i++){
+	  if (curproc->psignals[i])
+		  break;
+  }
+  if(i == NSIG)
+	  return;
+  struct trapframe temp;
+
+  //store trapframe
+  temp = *(curproc->tf);
+
+  curproc->tf->eip = (uint)curproc->handlers[i];
+
+  //need to call sigret
+  
+
+}
 //PAGEBREAK: 36
 // Print a process listing to console.  For debugging.
 // Runs when user types ^P on console.
