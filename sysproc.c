@@ -48,6 +48,16 @@ sys_sendkill(void)
 }
 
 int
+sys_signal(void){
+  int signum;
+  char *ptr;
+  argint(0, &signum);
+  argptr(1, &ptr, sizeof(sighandler_t));
+  sighandler_t handler = (sighandler_t)ptr;
+  return signal(signum, handler);
+}
+
+int
 sys_getpid(void)
 {
   return myproc()->pid;

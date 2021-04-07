@@ -42,5 +42,3 @@ typedef void (*sighandler_t)(int);
 
 /* These should not be considered constants from userland.  */
 #define SIGRTMIN	32
-#ifndef SIGRTMAX
-#define SIGRTMAX	_NSIG
