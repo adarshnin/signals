@@ -122,8 +122,9 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
-int            sendkill(int, int);
-int            signal(int, sighandler_t);
+int             sendkill(int, int);
+int             signal(int, sighandler_t);
+void 		check_pending_signal(void);	
 
 // swtch.S
 void            swtch(struct context**, struct context*);

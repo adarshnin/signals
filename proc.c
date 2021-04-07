@@ -548,7 +548,6 @@ void check_pending_signal(void){
 
   //need to call sigret
   
-
 }
 //PAGEBREAK: 36
 // Print a process listing to console.  For debugging.
