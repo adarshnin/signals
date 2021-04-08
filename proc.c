@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "signal.h"
 
 struct {
   struct spinlock lock;
@@ -216,9 +217,46 @@ fork(void)
 
   np->state = RUNNABLE;
 
+  for (i = 0;i < NSIG; i++){
+    // curproc->handlers[i] = def_function;
+    if (i == SIGINT || i == SIGTERM){
+      curproc->handlers[i] = terminate_handler;
+    }
+    if (i == SIGSTOP || i == SIGTSTP){
+      curproc->handlers[i] = stop_handler;
+    }
+    if (i == SIGCONT){
+      curproc->handlers[i] = cont_handler;
+    }
+    if (i == SIGQUIT){
+      curproc->handlers[i] = term_core_handler;
+    }
+  }
+
   release(&ptable.lock);
 
   return pid;
+}
+
+int terminate_handler(struct proc *curproc){
+  curproc->state = ZOMBIE;
+  // Already killed? or to be killed??
+  curproc->killed = 1; 
+}
+
+int stop_handler(struct proc *curproc){
+  curproc->state = SLEEPING;
+  // Stop the process
+}
+
+int cont_handler(struct proc *curproc){
+  curproc->state = RUNNABLE;
+  // Continue the process
+}
+
+int term_core_handler(struct proc *curproc){
+  curproc->state = RUNNABLE;
+  // Terminate the process and produce core dump
 }
 
 // Exit the current process.  Does not return.
