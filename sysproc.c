@@ -107,7 +107,7 @@ int
 sys_signal(void){
   int signum;
   char *ptr;
-  if (argint(0, &signum) < 0 || argptr(1, &ptr, sizeof(sighandler_t)) < 0
+  if (argint(0, &signum) < 0 || argptr(1, &ptr, sizeof(sighandler_t)) < 0)
 	  return -1;
   sighandler_t handler = (sighandler_t)ptr;
   return signal(signum, handler);
