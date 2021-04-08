@@ -36,26 +36,7 @@ sys_kill(void)
   return kill(pid);
 }
 
-int
-sys_sendkill(void)
-{
-  int pid, signum;
-  argint(0, &pid);
-  argint(1, &signum);
-  if(pid < 0)
-    return -1;
-  return sendkill(pid, signum);
-}
 
-int
-sys_signal(void){
-  int signum;
-  char *ptr;
-  argint(0, &signum);
-  argptr(1, &ptr, sizeof(sighandler_t));
-  sighandler_t handler = (sighandler_t)ptr;
-  return signal(signum, handler);
-}
 
 int
 sys_getpid(void)
@@ -109,4 +90,25 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+//signals
+
+int
+sys_sendkill(void)
+{
+  int pid, signum;
+  if (argint(0, &pid) < 0 || argint(1, &signum) < 0)
+	  return -1;
+  return sendkill(pid, signum);
+}
+
+int
+sys_signal(void){
+  int signum;
+  char *ptr;
+  if (argint(0, &signum) < 0 || argptr(1, &ptr, sizeof(sighandler_t)) < 0
+	  return -1;
+  sighandler_t handler = (sighandler_t)ptr;
+  return signal(signum, handler);
 }
