@@ -1,8 +1,0 @@
-{
-    "files.associations": {
-        "sleeplock.h": "c",
-        "file.h": "c",
-        "signal.h": "c",
-        "exception": "c"
-    }
-}
