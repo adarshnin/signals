@@ -99,6 +99,17 @@ exec(char *path, char **argv)
   curproc->sz = sz;
   curproc->tf->eip = elf.entry;  // main
   curproc->tf->esp = sp;
+  
+  //set signal handlers to default
+  for (i = 0; i < NSIG; i++){
+    curproc->handlers[i] = 0;
+  }
+
+  //clear all pending signals
+  for (i = 0; i < NSIG; i++){
+    curproc->psignals[i] = 0;
+  }
+
   switchuvm(curproc);
   freevm(oldpgdir);
   return 0;

@@ -24,7 +24,7 @@ alltraps:
 .globl trapret
 trapret:
   #call check_pending_signal
-  call check_pending_signal
+  #call check_pending_signal
 
   popal
   popl %gs

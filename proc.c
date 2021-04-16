@@ -209,6 +209,17 @@ fork(void)
       np->ofile[i] = filedup(curproc->ofile[i]);
   np->cwd = idup(curproc->cwd);
 
+
+  //copy signal handlers from the parent
+  for (i = 0; i < NSIG; i++){
+    np->handlers[i] = curproc->handlers[i]; 
+  }
+
+  //copy pending signals from the parent
+  for (i = 0; i < NSIG; i++){
+    np->psignals[i] = curproc->psignals[i]; 
+  }
+
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
 
   pid = np->pid;
@@ -217,47 +228,32 @@ fork(void)
 
   np->state = RUNNABLE;
 
-  for (i = 0;i < NSIG; i++){
-    // curproc->handlers[i] = def_function;
-    if (i == SIGINT || i == SIGTERM){
-      curproc->handlers[i] = terminate_handler;
-    }
-    if (i == SIGSTOP || i == SIGTSTP){
-      curproc->handlers[i] = stop_handler;
-    }
-    if (i == SIGCONT){
-      curproc->handlers[i] = cont_handler;
-    }
-    if (i == SIGQUIT){
-      curproc->handlers[i] = term_core_handler;
-    }
-  }
 
   release(&ptable.lock);
 
   return pid;
 }
 
-int terminate_handler(struct proc *curproc){
-  curproc->state = ZOMBIE;
-  // Already killed? or to be killed??
-  curproc->killed = 1; 
-}
-
-int stop_handler(struct proc *curproc){
-  curproc->state = SLEEPING;
-  // Stop the process
-}
-
-int cont_handler(struct proc *curproc){
-  curproc->state = RUNNABLE;
-  // Continue the process
-}
-
-int term_core_handler(struct proc *curproc){
-  curproc->state = RUNNABLE;
-  // Terminate the process and produce core dump
-}
+//int terminate_handler(struct proc *curproc){
+//  curproc->state = ZOMBIE;
+//  // Already killed? or to be killed??
+//  curproc->killed = 1; 
+//}
+//
+//int stop_handler(struct proc *curproc){
+//  curproc->state = SLEEPING;
+//  // Stop the process
+//}
+//
+//int cont_handler(struct proc *curproc){
+//  curproc->state = RUNNABLE;
+//  // Continue the process
+//}
+//
+//int term_core_handler(struct proc *curproc){
+//  curproc->state = RUNNABLE;
+//  // Terminate the process and produce core dump
+//}
 
 // Exit the current process.  Does not return.
 // An exited process remains in the zombie state
@@ -577,12 +573,13 @@ void check_pending_signal(void){
   }
   if(i == NSIG)
 	  return;
-  struct trapframe temp;
+  //struct trapframe temp;
 
   //store trapframe
-  temp = *(curproc->tf);
+  //temp = *(curproc->tf);
 
   curproc->tf->eip = (uint)curproc->handlers[i];
+  curproc->psignals[i] = 0;
 
   //need to call sigret
   

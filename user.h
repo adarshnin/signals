@@ -1,3 +1,4 @@
+#include "signal.h"
 struct stat;
 struct rtcdate;
 
@@ -24,6 +25,7 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int sendkill(int, int);
+int signal(int, sighandler_t);
 
 // ulib.c
 int stat(const char*, struct stat*);
