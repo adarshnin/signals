@@ -2,6 +2,7 @@
 
 typedef void (*sighandler_t)(int);
 
+#define SIG_DFL     -1
 #define SIGHUP		 1
 #define SIGINT		 2
 #define SIGQUIT		 3

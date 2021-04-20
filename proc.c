@@ -228,7 +228,6 @@ fork(void)
 
   np->state = RUNNABLE;
 
-
   release(&ptable.lock);
 
   return pid;
@@ -240,15 +239,9 @@ fork(void)
 //  curproc->killed = 1; 
 //}
 //
-//int stop_handler(struct proc *curproc){
-//  curproc->state = SLEEPING;
-//  // Stop the process
-//}
-//
-//int cont_handler(struct proc *curproc){
-//  curproc->state = RUNNABLE;
-//  // Continue the process
-//}
+
+
+
 //
 //int term_core_handler(struct proc *curproc){
 //  curproc->state = RUNNABLE;
@@ -559,7 +552,12 @@ sendkill(int pid, int signum)
 int signal(int signum, sighandler_t handler)
 {
   struct proc *curproc = myproc();
-  curproc->handlers[signum] = handler;
+  int i;
+  cprintf("SIGSTOP received\n");
+  cprintf("handler = '%s'\n", handler);
+  for(i = 0; i < NSIG; i++){
+    curproc->handlers[signum] = handler;
+  }
   return 0;
 }
 
