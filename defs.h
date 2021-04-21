@@ -127,6 +127,7 @@ int             signal(int, sighandler_t);
 void 		check_pending_signal(void);	
 void            stop_handler();
 void            cont_handler();
+void            handle_signal();
 
 // swtch.S
 void            swtch(struct context**, struct context*);

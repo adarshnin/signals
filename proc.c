@@ -540,8 +540,8 @@ sendkill(int pid, int signum)
         p->psignals[signum] = 1; //For other signals
       }
       // Wake process from sleep if necessary.
-      if(p->state == SLEEPING)
-        p->state = RUNNABLE;
+      //if(p->state == SLEEPING)
+       // p->state = RUNNABLE;
       release(&ptable.lock);
       return 0;
     }
@@ -570,6 +570,7 @@ handle_signal(struct proc *curproc, int i)
         stop_handler();
         break;
       case SIGCONT:
+	cprintf("in SIGCONTr\n");
         cont_handler();
         break;
       default:
@@ -589,7 +590,7 @@ check_pending_signal(void) {
 
   //check pending signals
   for(i = 0; i < NSIG; i++){
-    if (curproc->psignals[i] && curproc->handlers[i])
+    if (curproc->psignals[i])
       break;
   }
   if(i == NSIG)
@@ -607,6 +608,7 @@ check_pending_signal(void) {
 
 void cont_handler(){
   struct proc *curproc = myproc();
+  cprintf("in cont handler\n");
   curproc->state = RUNNABLE;
  // Continue the process
 }
@@ -615,6 +617,8 @@ void stop_handler(){
   struct proc *curproc = myproc();
   cprintf("in stop handler\n");
   curproc->state = SLEEPING;
+  //while(curproc->state == SLEEPING);
+  //curproc->state = SLEEPING;
  // Stop the process
 }
 
