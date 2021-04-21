@@ -7,19 +7,6 @@
 #include "x86.h"
 #include "elf.h"
 
-void cont_handler(){
-  struct proc *curproc = myproc();
-  curproc->state = RUNNABLE;
- // Continue the process
-}
-
-void stop_handler(){
-  struct proc *curproc = myproc();
-  cprintf("in stop handler\n");
-  curproc->state = SLEEPING;
- // Stop the process
-}
-
 int
 exec(char *path, char **argv)
 {

@@ -579,6 +579,20 @@ void check_pending_signal(void){
   //need to call sigret
   
 }
+
+void cont_handler(){
+  struct proc *curproc = myproc();
+  curproc->state = RUNNABLE;
+ // Continue the process
+}
+
+void stop_handler(){
+  struct proc *curproc = myproc();
+  cprintf("in stop handler\n");
+  curproc->state = SLEEPING;
+ // Stop the process
+}
+
 //PAGEBREAK: 36
 // Print a process listing to console.  For debugging.
 // Runs when user types ^P on console.
