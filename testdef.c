@@ -4,25 +4,23 @@
 #include "fs.h"
 #include "signal.h"
 
-
-void handler(int signal){
-  printf (1, "signal handled\n");
-}
-
 int main(){
   char c;
   int pid = fork(); 
   if (pid == 0){
-    signal(SIGCONT, handler);
-    read(0, &c, 1);
-    printf (1, "child over\n");
+    signal(SIGSTOP, (sighandler_t)SIG_DFL);
+    read(0, &c, 1); 
+    printf(1,"child stopped\n");
+    printf(1,"This is the child\n");
+
+
   }
   else{
     printf (1, "in parent\n");
-    sendkill(pid, SIGCONT); 
+    sendkill(pid, SIGSTOP); 
     read(0, &c, 1);
     wait();
+    printf (1, "parent over\n");
   }
-  printf (1, "over\n");
   exit();
 }

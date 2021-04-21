@@ -7,6 +7,19 @@
 #include "x86.h"
 #include "elf.h"
 
+void cont_handler(){
+  struct proc *curproc = myproc();
+  curproc->state = RUNNABLE;
+ // Continue the process
+}
+
+void stop_handler(){
+  struct proc *curproc = myproc();
+  cprintf("in stop handler\n");
+  curproc->state = SLEEPING;
+ // Stop the process
+}
+
 int
 exec(char *path, char **argv)
 {
@@ -102,7 +115,15 @@ exec(char *path, char **argv)
   
   //set signal handlers to default
   for (i = 0; i < NSIG; i++){
-    curproc->handlers[i] = 0;
+    if (i == SIGSTOP){
+      curproc->handlers[i] = stop_handler;
+    }
+    if (i == SIGCONT){
+      curproc->handlers[i] = cont_handler;
+    }
+    else{
+      curproc->handlers[i] = 0;
+    }
   }
 
   //clear all pending signals
@@ -123,3 +144,4 @@ exec(char *path, char **argv)
   }
   return -1;
 }
+
