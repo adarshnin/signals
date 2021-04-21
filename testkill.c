@@ -13,7 +13,7 @@ int main(){
   int i;
   int pid = fork(); 
   if (pid == 0){
-    signal(SIGCONT, handler);
+    signal(SIGSTOP, handler);
     sleep(100);
     for (i = 0; i < 600; i++){
       printf (1, "num - %d\n", i);
@@ -23,7 +23,7 @@ int main(){
   else{
     printf (1, "in parent\n");
     sleep(200);
-    sendkill(pid, SIGCONT); 
+    sendkill(pid, SIGSTOP); 
     wait();
   }
   printf (1, "over\n");
