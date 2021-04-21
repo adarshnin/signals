@@ -551,16 +551,42 @@ sendkill(int pid, int signum)
 }
 
 
-int signal(int signum, sighandler_t handler)
+int 
+signal(int signum, sighandler_t handler)
 {
   struct proc *curproc = myproc();
   curproc->handlers[signum] = handler;
   return 0;
 }
 
-void check_pending_signal(void){
+void 
+handle_signal(struct proc *curproc, int i)
+{
+  if (curproc->handlers[i] == SIG_IGN)
+    return;
+  else if (curproc->handlers[i] == SIG_DFL){
+    switch(i){
+      case SIGSTOP:
+        stop_handler();
+        break;
+      case SIGCONT:
+        cont_handler();
+        break;
+      default:
+        break;
+    }
+  }
+  else{
+    curproc->tf->eip = (uint)curproc->handlers[i];
+  }
+    curproc->psignals[i] = 0;
+}
+
+void 
+check_pending_signal(void) {
   struct proc *curproc = myproc();
   int i;
+
   //check pending signals
   for(i = 0; i < NSIG; i++){
     if (curproc->psignals[i] && curproc->handlers[i])
@@ -573,11 +599,10 @@ void check_pending_signal(void){
   //store trapframe
   //temp = *(curproc->tf);
 
-  curproc->tf->eip = (uint)curproc->handlers[i];
-  curproc->psignals[i] = 0;
+  handle_signal(curproc, i);
+
 
   //need to call sigret
-  
 }
 
 void cont_handler(){

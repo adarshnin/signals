@@ -6,6 +6,7 @@
 #include "defs.h"
 #include "x86.h"
 #include "elf.h"
+#include "signal.h"
 
 int
 exec(char *path, char **argv)
@@ -102,21 +103,10 @@ exec(char *path, char **argv)
   
   //set signal handlers to default
   for (i = 0; i < NSIG; i++){
-    if (i == SIGSTOP){
-      curproc->handlers[i] = stop_handler;
-    }
-    if (i == SIGCONT){
-      curproc->handlers[i] = cont_handler;
-    }
-    else{
-      curproc->handlers[i] = 0;
-    }
+    curproc->handlers[i] = SIG_DFL;
   }
 
-  //clear all pending signals
-  for (i = 0; i < NSIG; i++){
-    curproc->psignals[i] = 0;
-  }
+  
 
   switchuvm(curproc);
   freevm(oldpgdir);
