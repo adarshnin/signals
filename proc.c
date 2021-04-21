@@ -76,6 +76,7 @@ allocproc(void)
 {
   struct proc *p;
   char *sp;
+  int i;
 
   acquire(&ptable.lock);
 
@@ -112,6 +113,11 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
+
+  //clear pending signals
+  for (i = 0; i < NSIG; i++){
+    p->psignals[i] = 0; 
+  }
 
   return p;
 }
@@ -215,10 +221,6 @@ fork(void)
     np->handlers[i] = curproc->handlers[i]; 
   }
 
-  //copy pending signals from the parent
-  for (i = 0; i < NSIG; i++){
-    np->psignals[i] = curproc->psignals[i]; 
-  }
 
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
 
@@ -552,9 +554,6 @@ sendkill(int pid, int signum)
 int signal(int signum, sighandler_t handler)
 {
   struct proc *curproc = myproc();
-  int i;
-  //cprintf("SIGSTOP received\n");
-  //cprintf("handler = '%s'\n", handler);
   curproc->handlers[signum] = handler;
   return 0;
 }
