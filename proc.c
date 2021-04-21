@@ -563,11 +563,11 @@ void check_pending_signal(void){
   int i;
   //check pending signals
   for(i = 0; i < NSIG; i++){
-	  if (curproc->psignals[i])
-		  break;
+    if (curproc->psignals[i] && curproc->handlers[i])
+      break;
   }
   if(i == NSIG)
-	  return;
+    return;
   //struct trapframe temp;
 
   //store trapframe
