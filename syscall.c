@@ -105,6 +105,7 @@ extern int sys_write(void);
 extern int sys_uptime(void);
 extern int sys_sendkill(void);
 extern int sys_signal(void);
+extern int sys_sigret(void);
 
 
 static int (*syscalls[])(void) = {
@@ -129,8 +130,9 @@ static int (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
-[SYS_sendkill]   sys_sendkill,
+[SYS_sendkill] sys_sendkill,
 [SYS_signal]   sys_signal,
+[SYS_sigret]   sys_sigret, 
 
 };
 

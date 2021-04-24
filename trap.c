@@ -41,7 +41,7 @@ trap(struct trapframe *tf)
       exit();
     myproc()->tf = tf;
     syscall();
-    check_pending_signal();
+    //check_pending_signal();
     if(myproc()->killed)
       exit();
     return;

@@ -559,6 +559,50 @@ signal(int signum, sighandler_t handler)
   return 0;
 }
 
+//sigret function
+int
+sigret(void){
+  cprintf ("in sigret function\n");
+  struct proc *curproc = myproc();
+
+  //restore the oldtrapframe
+  memmove((void *)curproc->tf, (void *)curproc->oldtf, sizeof(struct trapframe));
+  return 0;
+}
+
+
+//http://courses.cms.caltech.edu/cs124/lectures-wi2016/CS124Lec15.pdf
+void
+user_handler(struct proc *curproc, int i) {
+  cprintf ("in user handler\n");
+  //user stack esp
+  uint ustack_esp = curproc->tf->esp;
+
+  //save the current trapframe from kernel stack to user stack
+  ustack_esp -= sizeof(struct trapframe);
+  memmove ((void*)ustack_esp, (void*)curproc->tf, sizeof(struct trapframe));
+  curproc->oldtf = (struct trapframe *)ustack_esp;
+
+  //push the signal number
+  ustack_esp -= sizeof(uint);
+  *((uint *)ustack_esp) = i;
+
+  //push the return address of sigret function
+  ustack_esp -= sizeof(uint);
+  //*((uint *)(ustack_esp)) = (uint)sigret;
+  memmove((void*)ustack_esp, (void*)&sigret, sizeof(uint));
+
+  //change the esp stored in tf
+  curproc->tf->esp = ustack_esp;
+
+  //now change the eip to point to the user handler
+  curproc->tf->eip = (uint)curproc->handlers[i];
+
+  return; 
+}
+
+
+
 void 
 handle_signal(struct proc *curproc, int i)
 {
@@ -570,7 +614,6 @@ handle_signal(struct proc *curproc, int i)
         stop_handler();
         break;
       case SIGCONT:
-	cprintf("in SIGCONTr\n");
         cont_handler();
         break;
       default:
@@ -578,9 +621,10 @@ handle_signal(struct proc *curproc, int i)
     }
   }
   else{
-    curproc->tf->eip = (uint)curproc->handlers[i];
+    user_handler(curproc, i);
+    //curproc->tf->eip = (uint)curproc->handlers[i];
   }
-    curproc->psignals[i] = 0;
+  curproc->psignals[i] = 0;
 }
 
 void 
@@ -595,28 +639,22 @@ check_pending_signal(void) {
   }
   if(i == NSIG)
     return;
-  //struct trapframe temp;
-
-  //store trapframe
-  //temp = *(curproc->tf);
 
   handle_signal(curproc, i);
 
-
-  //need to call sigret
 }
 
 void cont_handler(){
-  struct proc *curproc = myproc();
+  //struct proc *curproc = myproc();
   cprintf("in cont handler\n");
-  curproc->state = RUNNABLE;
+  //curproc->state = RUNNABLE;
  // Continue the process
 }
 
 void stop_handler(){
-  struct proc *curproc = myproc();
+  //struct proc *curproc = myproc();
   cprintf("in stop handler\n");
-  curproc->state = SLEEPING;
+  //curproc->state = SLEEPING;
   //while(curproc->state == SLEEPING);
   //curproc->state = SLEEPING;
  // Stop the process

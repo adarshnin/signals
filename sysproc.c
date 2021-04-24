@@ -112,3 +112,8 @@ sys_signal(void){
   sighandler_t handler = (sighandler_t)ptr;
   return signal(signum, handler);
 }
+
+int
+sys_sigret(void){
+  return sigret();
+}

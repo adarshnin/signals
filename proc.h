@@ -53,6 +53,7 @@ struct proc {
   char name[16];               // Process name (debugging)
   int psignals[NSIG];          // Pending signals
   sighandler_t handlers[NSIG];           // signal handler array
+  struct trapframe *oldtf; 	//to save the old trapframe
 };
 
 // Process memory is laid out contiguously, low addresses first:

@@ -6,6 +6,7 @@
 
 
 void handler(int signal){
+  printf (1, "\nthe signal number is %d\n", signal);
   printf (1, "signal handled\n");
 }
 
@@ -23,9 +24,10 @@ int main(){
   else{
     printf (1, "in parent\n");
     sleep(200);
-    sendkill(pid, SIGSTOP); 
-    sleep(200);
     sendkill(pid, SIGCONT); 
+    //sendkill(pid, SIGSTOP); 
+    //sleep(200);
+    //sendkill(pid, SIGCONT); 
     wait();
   }
   printf (1, "over\n");
