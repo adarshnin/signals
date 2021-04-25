@@ -555,6 +555,8 @@ int
 signal(int signum, sighandler_t handler)
 {
   struct proc *curproc = myproc();
+  //some checking for SIGSTOP and SIGKILL is needed
+  //
   curproc->handlers[signum] = handler;
   return 0;
 }
@@ -573,7 +575,8 @@ sigret(void){
 
 //http://courses.cms.caltech.edu/cs124/lectures-wi2016/CS124Lec15.pdf
 void
-user_handler(struct proc *curproc, int i) {
+user_handler(struct proc *curproc, int i) 
+{
   cprintf ("in user handler\n");
   //user stack esp
   uint ustack_esp = curproc->tf->esp;
@@ -608,6 +611,7 @@ handle_signal(struct proc *curproc, int i)
 {
   if (curproc->handlers[i] == SIG_IGN)
     return;
+
   else if (curproc->handlers[i] == SIG_DFL){
     switch(i){
       case SIGSTOP:
@@ -620,15 +624,19 @@ handle_signal(struct proc *curproc, int i)
         break;
     }
   }
+
   else{
     user_handler(curproc, i);
     //curproc->tf->eip = (uint)curproc->handlers[i];
   }
+
+  //clear the pending signal flag
   curproc->psignals[i] = 0;
 }
 
 void 
-check_pending_signal(void) {
+check_pending_signal(void) 
+{
   struct proc *curproc = myproc();
   int i;
 
@@ -644,7 +652,9 @@ check_pending_signal(void) {
 
 }
 
-void cont_handler(){
+void 
+cont_handler()
+{
   //struct proc *curproc = myproc();
   cprintf("in cont handler\n");
   //curproc->state = RUNNABLE;

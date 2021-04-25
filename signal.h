@@ -2,8 +2,12 @@
 
 typedef void (*sighandler_t)(int);
 
-#define SIG_IGN 	(void(*)(int))1
-#define SIG_DFL     	(void(*)(int))0	
+//fake functions
+#define SIG_ERR     	((void(*)(int)) -1)  //error return
+#define SIG_DFL     	((void(*)(int))  0)  //default signal handler	
+#define SIG_IGN 	((void(*)(int))  1)  //ignore signal
+
+
 #define SIGHUP		 1
 #define SIGINT		 2
 #define SIGQUIT		 3
