@@ -655,18 +655,18 @@ check_pending_signal(void)
 void 
 cont_handler()
 {
-  //struct proc *curproc = myproc();
+  struct proc *curproc = myproc();
   cprintf("in cont handler\n");
   //curproc->state = RUNNABLE;
+  wakeup(curproc);
  // Continue the process
 }
 
 void stop_handler(){
-  //struct proc *curproc = myproc();
   cprintf("in stop handler\n");
-  //curproc->state = SLEEPING;
-  //while(curproc->state == SLEEPING);
-  //curproc->state = SLEEPING;
+  acquire(&ptable.lock);
+  struct proc t;
+  sleep(&t, &ptable.lock);
  // Stop the process
 }
 

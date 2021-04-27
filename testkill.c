@@ -24,10 +24,10 @@ int main(){
   else{
     printf (1, "in parent\n");
     sleep(200);
-    sendkill(pid, SIGCONT); 
-    //sendkill(pid, SIGSTOP); 
-    //sleep(200);
-    //sendkill(pid, SIGCONT); 
+    // sendkill(pid, SIGCONT); 
+    sendkill(pid, SIGSTOP); 
+    // sleep(200);
+    // sendkill(pid, SIGCONT); 
     wait();
   }
   printf (1, "over\n");
