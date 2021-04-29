@@ -14,7 +14,7 @@ int main(){
   int i;
   int pid = fork(); 
   if (pid == 0){
-    signal(SIGCONT, handler);
+    // signal(SIGCONT, handler);
     sleep(100);
     for (i = 0; i < 500; i++){
       printf (1, "num - %d\n", i);
@@ -26,8 +26,8 @@ int main(){
     sleep(200);
     // sendkill(pid, SIGCONT); 
     sendkill(pid, SIGSTOP); 
-    // sleep(200);
-    // sendkill(pid, SIGCONT); 
+    sleep(200);
+    sendkill(pid, SIGCONT); 
     wait();
   }
   printf (1, "over\n");
