@@ -11,9 +11,18 @@
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
-} ptable;
+} ptable, q;
 
 static struct proc *initproc;
+
+struct proc test;
+
+// struct q {
+//     void *ptr;
+//     struct spinlock lock;
+// };
+
+void *p;
 
 int nextpid = 1;
 extern void forkret(void);
@@ -529,7 +538,7 @@ int
 sendkill(int pid, int signum)
 {
   struct proc *p;
-
+  cprintf("sendkill: %d\n", signum);
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){
@@ -537,12 +546,20 @@ sendkill(int pid, int signum)
         p->killed = 1;
       }
       else{
+        
         p->psignals[signum] = 1; //For other signals
       }
       // Wake process from sleep if necessary.
       //if(p->state == SLEEPING)
        // p->state = RUNNABLE;
       release(&ptable.lock);
+
+      if (signum == SIGCONT){
+          p->handlers[SIGCONT] = SIG_DFL;
+          handle_signal(p, SIGCONT);
+      }
+      cprintf("sendkill: exit\n");
+
       return 0;
     }
   }
@@ -609,6 +626,7 @@ user_handler(struct proc *curproc, int i)
 void 
 handle_signal(struct proc *curproc, int i)
 {
+  cprintf("handle_signal: %d\n", i);
   if (curproc->handlers[i] == SIG_IGN)
     return;
 
@@ -632,6 +650,8 @@ handle_signal(struct proc *curproc, int i)
 
   //clear the pending signal flag
   curproc->psignals[i] = 0;
+  cprintf("handle_signal: over\n");
+  
 }
 
 void 
@@ -649,26 +669,29 @@ check_pending_signal(void)
     return;
 
   handle_signal(curproc, i);
+  cprintf("check: over\n");
 
 }
 
 void 
 cont_handler()
 {
-  struct proc *curproc = myproc();
   cprintf("in cont handler\n");
-  //curproc->state = RUNNABLE;
-  wakeup(curproc);
+  acquire(&q.lock);
+  wakeup(p);
  // Continue the process
+  release(&q.lock);
 }
 
-void stop_handler(){
+void 
+stop_handler(){
   cprintf("in stop handler\n");
-  acquire(&ptable.lock);
-  struct proc t;
-  sleep(&t, &ptable.lock);
- // Stop the process
+  acquire(&q.lock);
+  sleep(p, &q.lock);
+  // Stop the process
+  release(&q.lock);
 }
+
 
 //PAGEBREAK: 36
 // Print a process listing to console.  For debugging.
