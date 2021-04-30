@@ -9,6 +9,15 @@ void handler(int signal){
   printf (1, "\nthe signal number is %d\n", signal);
   printf (1, "signal handled\n");
 }
+// Passed Testcases:
+// SIGKILL
+// SIGSTOP
+// SIGSTOP then SIGCONT
+// SIGCONT
+// SIGSTOP then SIGKILL
+// SIGTERM
+// SIGSTOP then SIGTERM
+// SIGSTOP then SIGCONT then SIGTERM
 
 int main(){
   int i;
@@ -16,7 +25,7 @@ int main(){
   if (pid == 0){
     // signal(SIGCONT, handler);
     sleep(100);
-    for (i = 0; i < 500; i++){
+    for (i = 0; i < 1000; i++){
       printf (1, "num - %d\n", i);
     }
     printf (1, "child over\n");
@@ -24,12 +33,14 @@ int main(){
   else{
     printf (1, "in parent\n");
     sleep(200);
-    // sendkill(pid, SIGCONT); 
     sendkill(pid, SIGSTOP); 
     sleep(200);
     sendkill(pid, SIGCONT); 
+    sleep(100);
+    sendkill(pid, SIGTERM); 
     wait();
   }
   printf (1, "over\n");
   exit();
+
 }

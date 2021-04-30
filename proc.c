@@ -127,7 +127,7 @@ found:
   for (i = 0; i < NSIG; i++){
     p->psignals[i] = 0; 
   }
-
+  p->sig_cnt = 0;
   return p;
 }
 
@@ -542,21 +542,28 @@ sendkill(int pid, int signum)
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){
-      if(signum == SIGKILL || signum == SIGINT){
+      if(signum == SIGKILL){
         p->killed = 1;
       }
       else{
         
         p->psignals[signum] = 1; //For other signals
+        p->sig_cnt += 1;
       }
       // Wake process from sleep if necessary.
       //if(p->state == SLEEPING)
        // p->state = RUNNABLE;
       release(&ptable.lock);
-
-      if (signum == SIGCONT){
-          p->handlers[SIGCONT] = SIG_DFL;
-          handle_signal(p, SIGCONT);
+      cprintf("sigcnt = %d\n", p->sig_cnt);
+      if(p->sig_cnt == 2){
+        if (signum == SIGCONT){
+            p->handlers[SIGCONT] = SIG_DFL;
+            handle_signal(p, SIGCONT);
+        }
+        if (signum == SIGTERM){
+            p->handlers[SIGTERM] = SIG_DFL;
+            handle_signal(p, SIGTERM);
+        }
       }
       cprintf("sendkill: exit\n");
 
@@ -623,6 +630,7 @@ user_handler(struct proc *curproc, int i)
 
 
 
+
 void 
 handle_signal(struct proc *curproc, int i)
 {
@@ -638,6 +646,9 @@ handle_signal(struct proc *curproc, int i)
       case SIGCONT:
         cont_handler();
         break;
+      case SIGTERM:
+        term_handler();
+        break;
       default:
         break;
     }
@@ -650,6 +661,7 @@ handle_signal(struct proc *curproc, int i)
 
   //clear the pending signal flag
   curproc->psignals[i] = 0;
+  curproc->sig_cnt -= 1;
   cprintf("handle_signal: over\n");
   
 }
@@ -671,6 +683,18 @@ check_pending_signal(void)
   handle_signal(curproc, i);
   cprintf("check: over\n");
 
+}
+
+void term_handler()
+{
+  cprintf("in term handler\n");
+  struct proc *p = myproc();
+  acquire(&ptable.lock);
+  p->killed = 1;
+  // sched();
+
+  // Terminate the process
+  release(&ptable.lock);
 }
 
 void 
