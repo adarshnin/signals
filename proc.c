@@ -593,7 +593,8 @@ user_handler(struct proc *curproc, int i)
   //push the return address of sigret function
   ustack_esp -= sizeof(uint);
   //*((uint *)(ustack_esp)) = (uint)sigret;
-  memmove((void*)ustack_esp, (void*)&sigret, sizeof(uint));
+  curproc->tf->eax = 24;
+  memmove((void*)ustack_esp, (void*)&syscall, sizeof(uint));
 
   //change the esp stored in tf
   curproc->tf->esp = ustack_esp;
