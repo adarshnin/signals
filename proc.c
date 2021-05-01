@@ -630,13 +630,32 @@ handle_signal(struct proc *curproc, int i)
   else if (curproc->handlers[i] == SIG_DFL){
     switch(i){
       case SIGSTOP:
+      case SIGTSTP:
+      case SIGTTIN:
+      case SIGTTOU:
         stop_handler();
         break;
       case SIGCONT:
         cont_handler();
         break;
       case SIGTERM:
+      case SIGINT:
+      case SIGALRM:
+      case SIGHUP:
+      case SIGIO:
+      case SIGPIPE:
+      case SIGPROF:
+      case SIGPWR:
+      case SIGSTKFLT:
+      case SIGUSR1:
+      case SIGUSR2:
+      case SIGVTALRM:
         term_handler();
+        break;
+      case SIGCHLD:
+      case SIGURG:
+      case SIGWINCH:
+      // Doubt - ignore handler()
         break;
       default:
         break;

@@ -18,6 +18,9 @@ void handler(int signal){
 // SIGTERM
 // SIGSTOP then SIGTERM
 // SIGSTOP then SIGCONT then SIGTERM
+// SIGTSTP
+// SIGINT
+
 
 int main(){
   int i;
@@ -33,7 +36,7 @@ int main(){
   else{
     printf (1, "in parent\n");
     sleep(200);
-    sendkill(pid, SIGSTOP); 
+    sendkill(pid, SIGTSTP); 
     sleep(200);
     sendkill(pid, SIGCONT); 
     sleep(200);
