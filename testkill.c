@@ -36,7 +36,7 @@ int main(){
     sendkill(pid, SIGSTOP); 
     sleep(200);
     sendkill(pid, SIGCONT); 
-    sleep(100);
+    sleep(200);
     sendkill(pid, SIGTERM); 
     wait();
   }

@@ -127,7 +127,6 @@ found:
   for (i = 0; i < NSIG; i++){
     p->psignals[i] = 0; 
   }
-  p->sig_cnt = 0;
   return p;
 }
 
@@ -548,25 +547,15 @@ sendkill(int pid, int signum)
       else{
         
         p->psignals[signum] = 1; //For other signals
-        p->sig_cnt += 1;
       }
       // Wake process from sleep if necessary.
       //if(p->state == SLEEPING)
        // p->state = RUNNABLE;
       release(&ptable.lock);
-      cprintf("sigcnt = %d\n", p->sig_cnt);
-      if(p->sig_cnt == 2){
-        if (signum == SIGCONT){
-            p->handlers[SIGCONT] = SIG_DFL;
-            handle_signal(p, SIGCONT);
-        }
-        if (signum == SIGTERM){
-            p->handlers[SIGTERM] = SIG_DFL;
-            handle_signal(p, SIGTERM);
-        }
+      if (p->state == SLEEPING){
+        p->handlers[signum] = SIG_DFL;
+        handle_signal(p, signum);
       }
-      cprintf("sendkill: exit\n");
-
       return 0;
     }
   }
@@ -661,8 +650,6 @@ handle_signal(struct proc *curproc, int i)
 
   //clear the pending signal flag
   curproc->psignals[i] = 0;
-  curproc->sig_cnt -= 1;
-  cprintf("handle_signal: over\n");
   
 }
 
@@ -681,7 +668,6 @@ check_pending_signal(void)
     return;
 
   handle_signal(curproc, i);
-  cprintf("check: over\n");
 
 }
 

@@ -52,7 +52,6 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
   int psignals[NSIG];          // Pending signals
-  int sig_cnt;                 //Count of pending signals
   sighandler_t handlers[NSIG];           // signal handler array
   struct trapframe *oldtf; 	//to save the old trapframe
 };
