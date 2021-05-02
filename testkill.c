@@ -9,6 +9,18 @@ void handler(int signal){
   printf (1, "\nthe signal number is %d\n", signal);
   printf (1, "signal handled\n");
 }
+// Passed Testcases:
+// SIGKILL
+// SIGSTOP
+// SIGSTOP then SIGCONT
+// SIGCONT
+// SIGSTOP then SIGKILL
+// SIGTERM
+// SIGSTOP then SIGTERM
+// SIGSTOP then SIGCONT then SIGTERM
+// SIGSTOP
+// SIGINT
+
 
 int main(){
   int i;
