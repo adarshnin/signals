@@ -6,12 +6,10 @@
 
 //in user handler change the value of registers which are stored in trapframe
 void cont_handler(int signal){
-  _asm_ ("movl $0x0,%eax\n\t");
-  _asm_ ("movl $0x43,%ebx\n\t");
-  _asm_ ("movl $0x76,%ecx\n\t");
+  __asm__ ("movl $0x0,%eax\n\t");
+  __asm__ ("movl $0x43,%ebx\n\t");
+  __asm__ ("movl $0x76,%ecx\n\t");
 }
-
-
 
 int main(){
   int i = 0;
@@ -23,9 +21,9 @@ int main(){
     register uint eax asm ("%eax");
     register uint ebx asm ("%ebx");
     register uint ecx asm ("%ecx");
-    _asm_ ("movl $0x21,%eax\n\t");
-    _asm_ ("movl $0x10,%ebx\n\t");
-    _asm_ ("movl $0x03,%ecx\n\t");
+    __asm__ ("movl $0x21,%eax\n\t");
+    __asm__ ("movl $0x10,%ebx\n\t");
+    __asm__ ("movl $0x03,%ecx\n\t");
     uint saved_eax = eax;
     uint saved_ebx = ebx;
     uint saved_ecx = ecx;
