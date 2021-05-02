@@ -570,6 +570,10 @@ sendkill(int pid, int signum)
 int 
 signal(int signum, sighandler_t handler)
 {
+  //can't set up uesr handler for SIGSTOP and SIGKILL 
+  if (signum == SIGSTOP || signum == SIGKILL){
+	  return -1;
+  }
   struct proc *curproc = myproc();
   //some checking for SIGSTOP and SIGKILL is needed
   //
