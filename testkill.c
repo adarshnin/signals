@@ -23,21 +23,31 @@ void handler(int signal){
 
 
 int main(){
-    int pid = fork();
+    int ret = 0;
+    int pid;
+  pid = fork();
 
-    if(pid == 0) {
-	signal(SIGCONT, handler);
-        int i = 0;
-        while (1) {
-            printf(1,"%d\n",i++);
-        }
+  if(pid == 0) {
+    printf(1, "pause() test\n");
+    ret = pause();
+    if (-1 == ret)
+      printf(1, "pause() test ok\n");
     } 
-    else
-    {
-            sleep(200);
-            sendkill(pid, SIGCONT);
-        wait();
-    }
+  else
+  {
+    sleep(200);
+    // printf(1,"pid = %d\n", pid);
+    sendkill(pid, SIGTERM);
+    wait();
+  }
+          // sleep(200);
+        //     sendkill(pid, SIGSTOP);
+        //     sendkill(pid, SIGCONT);
+        //     sendkill(pid, SIGSTOP);
+        //     sendkill(pid, SIGCONT);
+        //     sendkill(pid, SIGSTOP);
+        //     sendkill(pid, SIGCONT);
+        //     sendkill(pid, SIGTERM);
     // int ret = 0;
 
     // int pid = fork();

@@ -11,11 +11,11 @@
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
-} ptable;
+} ptable, q;
 
-struct {
-  struct spinlock lock;
-} q;
+// struct {
+//   struct spinlock lock;
+// } q;
 
 static struct proc *initproc;
 
@@ -577,7 +577,6 @@ int
 pause()
 {
   paused = 1;
-  cprintf("pause: Going to sleep\n");
   acquire(&q.lock);
   sleep(p, &q.lock);
   release(&q.lock);
@@ -601,7 +600,6 @@ signal(int signum, sighandler_t handler)
 //sigret function
 int
 sigret(void){
-  cprintf ("in sigret function\n");
   struct proc *curproc = myproc();
 
   //restore the oldtrapframe
@@ -726,14 +724,12 @@ check_pending_signal(void)
 
 void term_handler(struct proc *argp)
 {
-  cprintf("in term handler\n");
   struct proc *p = argp;
   acquire(&ptable.lock);
+    p->killed = 1;
   if(p->state == SLEEPING){
     p->state = RUNNABLE;
   }
-  p->killed = 1;
-
   // Terminate the process
   release(&ptable.lock);
 }
@@ -742,7 +738,6 @@ void term_handler(struct proc *argp)
 void 
 cont_handler()
 {
-  cprintf("in cont handler\n");
   acquire(&q.lock);
   wakeup(p);
  // Continue the process
@@ -751,7 +746,6 @@ cont_handler()
 
 void 
 stop_handler(){
-  cprintf("in stop handler\n");
   acquire(&q.lock);
   sleep(p, &q.lock);
   // Stop the process
