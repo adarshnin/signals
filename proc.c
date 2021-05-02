@@ -548,11 +548,8 @@ sendkill(int pid, int signum)
         
         p->psignals[signum] = 1; //For other signals
       }
-      // Wake process from sleep if necessary.
-      //if(p->state == SLEEPING)
-       // p->state = RUNNABLE;
       release(&ptable.lock);
-      if (p->state == SLEEPING){
+      if (p->state == SLEEPING && p->killed != 1){
         p->handlers[signum] = SIG_DFL;
         handle_signal(p, signum);
       }

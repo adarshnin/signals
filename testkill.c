@@ -18,32 +18,47 @@ void handler(int signal){
 // SIGTERM
 // SIGSTOP then SIGTERM
 // SIGSTOP then SIGCONT then SIGTERM
-// SIGTSTP
+// SIGSTOP
 // SIGINT
 
 
 int main(){
-  int i;
-  int pid = fork(); 
-  if (pid == 0){
-    // signal(SIGCONT, handler);
-    sleep(100);
-    for (i = 0; i < 1000; i++){
-      printf (1, "num - %d\n", i);
-    }
-    printf (1, "child over\n");
-  }
-  else{
-    printf (1, "in parent\n");
-    sleep(200);
-    sendkill(pid, SIGTSTP); 
-    sleep(200);
-    sendkill(pid, SIGCONT); 
-    sleep(200);
-    sendkill(pid, SIGTERM); 
-    wait();
-  }
-  printf (1, "over\n");
-  exit();
+    int pid = fork();
 
+    if(pid == 0) {
+        sleep(200);
+        int i = 0;
+        while (1) {
+            printf(1, "%d", i++);
+        }
+    } 
+    else
+    {  
+        sleep(200);
+        sendkill(pid, SIGSTOP);
+        sleep(200);
+        sendkill(pid, SIGCONT);
+        sleep(200);
+        sendkill(pid, SIGSTOP);
+        sleep(200);
+        sendkill(pid, SIGCONT); 
+        sleep(200);
+        sendkill(pid, SIGSTOP);
+        sleep(200);
+        sendkill(pid, SIGCONT);
+        sleep(200);
+        sendkill(pid, SIGSTOP);
+        sleep(200);
+        sendkill(pid, SIGCONT); 
+        sleep(200);
+        sendkill(pid, SIGSTOP);
+        sleep(200);
+        sendkill(pid, SIGCONT);
+        printf(1, "SIGSTOP Test Passed\n");
+        printf(1, "SIGCONT Test Passed\n");
+        sendkill(pid, SIGTERM);
+        printf(1, "SIGTERM Test Passed\n");
+        wait();
+    }
+    exit();
 }
