@@ -11,9 +11,18 @@
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
-} ptable;
+} ptable, q;
 
 static struct proc *initproc;
+
+struct proc test;
+
+// struct q {
+//     void *ptr;
+//     struct spinlock lock;
+// };
+
+void *p;
 
 int nextpid = 1;
 extern void forkret(void);
@@ -529,7 +538,6 @@ int
 sendkill(int pid, int signum)
 {
   struct proc *p;
-
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){
@@ -537,12 +545,20 @@ sendkill(int pid, int signum)
         p->killed = 1;
       }
       else{
+        
         p->psignals[signum] = 1; //For other signals
       }
       // Wake process from sleep if necessary.
       //if(p->state == SLEEPING)
        // p->state = RUNNABLE;
       release(&ptable.lock);
+
+      //if (signum == SIGCONT){
+      //    p->handlers[SIGCONT] = SIG_DFL;
+      //    handle_signal(p, SIGCONT);
+      //}
+      //cprintf("sendkill: exit\n");
+
       return 0;
     }
   }
@@ -586,15 +602,29 @@ user_handler(struct proc *curproc, int i)
   memmove ((void*)ustack_esp, (void*)curproc->tf, sizeof(struct trapframe));
   curproc->oldtf = (struct trapframe *)ustack_esp;
 
+  // Wrap and copy the sig_ret asm code on user stack
+   void *sig_ret_code_addr = (void *)execute_sigret_syscall_start;
+   uint sig_ret_code_size = ((uint)&execute_sigret_syscall_end - (uint)&execute_sigret_syscall_start);
+   
+   // // debug:
+   // cprintf("code size : %d\n",sig_ret_code_size);
+ 
+   // return addr for handler
+   ustack_esp -= sig_ret_code_size;
+   uint handler_ret_addr = ustack_esp;
+   memmove((void *)ustack_esp, sig_ret_code_addr, sig_ret_code_size);
+
   //push the signal number
   ustack_esp -= sizeof(uint);
   *((uint *)ustack_esp) = i;
 
   //push the return address of sigret function
   ustack_esp -= sizeof(uint);
+  memmove((void*)ustack_esp, (void*)&handler_ret_addr, sizeof(uint));
   //*((uint *)(ustack_esp)) = (uint)sigret;
-  curproc->tf->eax = 24;
-  memmove((void*)ustack_esp, (void*)&syscall, sizeof(uint));
+  //curproc->tf->eax = 24;
+  //curproc->tf->trapno = 64;
+  //memmove((void*)ustack_esp, (void*)&trap, sizeof(uint));
 
   //change the esp stored in tf
   curproc->tf->esp = ustack_esp;
@@ -633,6 +663,7 @@ handle_signal(struct proc *curproc, int i)
 
   //clear the pending signal flag
   curproc->psignals[i] = 0;
+  
 }
 
 void 
@@ -656,20 +687,22 @@ check_pending_signal(void)
 void 
 cont_handler()
 {
-  struct proc *curproc = myproc();
   cprintf("in cont handler\n");
-  //curproc->state = RUNNABLE;
-  wakeup(curproc);
+  acquire(&q.lock);
+  wakeup(p);
  // Continue the process
+  release(&q.lock);
 }
 
-void stop_handler(){
+void 
+stop_handler(){
   cprintf("in stop handler\n");
-  acquire(&ptable.lock);
-  struct proc t;
-  sleep(&t, &ptable.lock);
- // Stop the process
+  acquire(&q.lock);
+  sleep(p, &q.lock);
+  // Stop the process
+  release(&q.lock);
 }
+
 
 //PAGEBREAK: 36
 // Print a process listing to console.  For debugging.
