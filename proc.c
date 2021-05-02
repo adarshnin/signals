@@ -11,12 +11,18 @@
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
-} ptable;
+} ptable, q;
 
+<<<<<<< HEAD
 struct {
   struct spinlock lock;
   struct spinlock siglock;
 } q;
+=======
+// struct {
+//   struct spinlock lock;
+// } q;
+>>>>>>> acd5eea88b186077a68ff3df74abb0a4452bcb29
 
 
 
@@ -580,7 +586,6 @@ int
 pause()
 {
   paused = 1;
-  cprintf("pause: Going to sleep\n");
   acquire(&q.lock);
   sleep(p, &q.lock);
   release(&q.lock);
@@ -732,14 +737,12 @@ check_pending_signal(void)
 
 void term_handler(struct proc *argp)
 {
-  cprintf("in term handler\n");
   struct proc *p = argp;
   acquire(&ptable.lock);
+    p->killed = 1;
   if(p->state == SLEEPING){
     p->state = RUNNABLE;
   }
-  p->killed = 1;
-
   // Terminate the process
   release(&ptable.lock);
 }
@@ -748,7 +751,6 @@ void term_handler(struct proc *argp)
 void 
 cont_handler()
 {
-  cprintf("in cont handler\n");
   acquire(&q.lock);
   wakeup(p);
  // Continue the process
@@ -757,7 +759,6 @@ cont_handler()
 
 void 
 stop_handler(){
-  cprintf("in stop handler\n");
   acquire(&q.lock);
   sleep(p, &q.lock);
   // Stop the process

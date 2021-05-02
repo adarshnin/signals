@@ -1738,13 +1738,102 @@ void argptest()
   printf(1, "arg test passed\n");
 }
 
-// Signals Testing
-void signals()
+// Signals testing
+void sendkill_test()
 {
-  int i, pid, ret;
-  printf(stdout, "signals test\n");
+  int i, pid, pid2, pid3;
+  printf(stdout, "sendkill_test test\n");
+  
+  pid = fork();
+  if(pid == 0) {
+    sleep(200);
+    i = 0;
+    while (1) {
+      i++;
+    }
+  } 
+  else
+  {
+    printf(stdout, "SIGSTOP test\n");
+    printf(stdout, "SIGCONT test\n");
+    for(i = 0; i < 2; i++){
+      sleep(200);
+      sendkill(pid, SIGSTOP);
+      sleep(200);
+      sendkill(pid, SIGCONT);
+    }
+    sleep(200);
+    printf(stdout, "SIGSTOP test ok\n");
+    printf(stdout, "SIGCONT test ok\n");
+    printf(stdout, "SIGTERM test\n");
+    sendkill(pid, SIGTERM);
+    printf(stdout, "SIGTERM test ok\n");
+    wait();
+  }
+  
+  printf(stdout, "race condition test\n");
+  
+  // Race condition
   pid = fork();
 
+  if(pid == 0) {
+    int i = 0;
+    while (1) {
+      i++;
+    }
+  } 
+  else
+  {
+    pid2 = fork();
+    if (pid2 == 0){
+      sleep(200);
+      sendkill(pid, SIGSTOP);
+      sleep(200);
+      sendkill(pid, SIGCONT);
+      sleep(200);
+      sendkill(pid, SIGSTOP);
+      sleep(200);
+      sendkill(pid, SIGCONT);
+      sleep(200);
+      sendkill(pid, SIGINT);
+    }
+    else{
+      pid3 = fork();
+      if (pid3 == 0){
+        sleep(200);
+        sendkill(pid, SIGSTOP);
+        sleep(200);
+        sendkill(pid, SIGCONT);
+        sleep(200);
+        sendkill(pid, SIGSTOP);
+        sleep(200);
+        sendkill(pid, SIGCONT);
+        sleep(200);
+        sendkill(pid, SIGINT);
+      }
+      else{
+          sleep(200);
+          sendkill(pid, SIGSTOP);
+          sleep(200);
+          sendkill(pid, SIGCONT);
+          sleep(200);
+          sendkill(pid, SIGSTOP);
+          sleep(200);
+          sendkill(pid, SIGCONT);
+          sleep(200);
+          sendkill(pid, SIGINT);
+          wait();
+          wait();
+          wait();
+      }
+    }
+  }
+
+  printf(stdout, "race condition test ok\n");
+
+  printf(stdout, "stress test\n");
+
+  pid = fork();
   if(pid == 0) {
     sleep(200);
     i = 0;
@@ -1754,38 +1843,39 @@ void signals()
   } 
   else
   {
-    for(i = 0; i < 2; i++){
-        sleep(200);
-        sendkill(pid, SIGSTOP);
-        sleep(200);
-        sendkill(pid, SIGCONT);
+    for(i = 0; i < 20; i++){
+      sleep(200);
+      sendkill(pid, SIGSTOP);
+      sleep(200);
+      sendkill(pid, SIGCONT);
     }
     sleep(200);
-    printf(1, "SIGSTOP Test Passed\n");
-    printf(1, "SIGCONT Test Passed\n");
     sendkill(pid, SIGTERM);
-    printf(1, "SIGTERM Test Passed\n");
     wait();
   }
+  printf(stdout, "stress test ok\n");
 
-  // pause() testing
+  printf(stdout, "sendkill_test test ok\n");
+}
+
+// Signals testing
+void sig_pause(){
+  int ret, pid;
   ret = 0;
   pid = fork();
 
   if(pid == 0) {
+    printf(stdout, "pause() test\n");
     ret = pause();
     if (-1 == ret)
-        printf(1,"Process exited\n");
+      printf(stdout, "pause() test ok\n");
     } 
   else
   {
-    printf(1,"Parent\n");
-
+    sleep(200);
     sendkill(pid, SIGTERM);
     wait();
   }
-  
-  printf(stdout, "signals test ok\n");
 }
 
 void 
@@ -1876,7 +1966,8 @@ main(int argc, char *argv[])
   }
   close(open("usertests.ran", O_CREATE));
 
-  signals();
+  sendkill_test();
+  sig_pause();
   argptest();
   createdelete();
   linkunlink();

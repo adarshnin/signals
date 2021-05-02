@@ -77,23 +77,5 @@ int main(){
     //}
     wait();
   }
-    // int ret = 0;
-
-    // int pid = fork();
-
-    // if(pid == 0) {
-    //     ret = pause();
-    //     if (-1 == ret)
-    //         printf(1,"Process exited\n");
-    //     } 
-    // else
-    // {
-    //     printf(1,"Parent\n");
-
-    //     sendkill(pid, SIGTERM);
-    //     wait();
-    // }
-   
-    
   exit();
 }
