@@ -15,7 +15,10 @@ struct {
 
 struct {
   struct spinlock lock;
+  struct spinlock siglock;
 } q;
+
+
 
 static struct proc *initproc;
 
@@ -594,14 +597,15 @@ signal(int signum, sighandler_t handler)
   struct proc *curproc = myproc();
   //some checking for SIGSTOP and SIGKILL is needed
   //
+  acquire(&q.siglock);
   curproc->handlers[signum] = handler;
+  release(&q.siglock);
   return 0;
 }
 
 //sigret function
 int
 sigret(void){
-  cprintf ("in sigret function\n");
   struct proc *curproc = myproc();
 
   //restore the oldtrapframe
@@ -702,7 +706,9 @@ handle_signal(struct proc *curproc, int i)
   }
 
   //clear the pending signal flag
+  acquire(&q.siglock);
   curproc->psignals[i] = 0;
+  release(&q.siglock);
   
 }
 
