@@ -26,7 +26,7 @@ int main(){
     int pid = fork();
 
     if(pid == 0) {
-        sleep(200);
+	signal(SIGCONT, handler);
         int i = 0;
         while (1) {
             printf(1,"%d\n",i++);
@@ -34,17 +34,8 @@ int main(){
     } 
     else
     {
-        for(int i = 0; i < 2; i++){
-            sleep(200);
-            sendkill(pid, SIGSTOP);
             sleep(200);
             sendkill(pid, SIGCONT);
-        }
-        sleep(200);
-        printf(1, "SIGSTOP Test Passed\n");
-        printf(1, "SIGCONT Test Passed\n");
-        sendkill(pid, SIGTERM);
-        printf(1, "SIGTERM Test Passed\n");
         wait();
     }
     // int ret = 0;

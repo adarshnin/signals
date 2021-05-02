@@ -542,7 +542,6 @@ int
 sendkill(int pid, int signum)
 {
   struct proc *p;
-  cprintf("sendkill: %d\n", signum);
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){
@@ -554,7 +553,6 @@ sendkill(int pid, int signum)
         p->psignals[signum] = 1; //For other signals
       }
       release(&ptable.lock);
-      cprintf("paused = %d\n", paused);
       if (p->state == SLEEPING){
         if(paused == 1 && (signum == SIGTERM || signum == SIGINT || signum == SIGKILL)){
           // For processes which are SLEEPING by pause()
