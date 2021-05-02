@@ -124,13 +124,14 @@ void            wakeup(void*);
 void            yield(void);
 int             sendkill(int, int);
 int             signal(int, sighandler_t);
-void 		check_pending_signal(void);	
+void 		    check_pending_signal(void);	
 void            stop_handler();
 void            cont_handler();
-void            term_handler();
+void            term_handler(struct proc*);
 void            handle_signal(struct proc*, int);
 void            user_handler(struct proc*, int);
-int 		sigret(void);
+int 		    sigret(void);
+int 		    pause(void);
 
 
 // swtch.S

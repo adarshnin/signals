@@ -23,6 +23,7 @@ struct proc test;
 // };
 
 void *p;
+int paused = 0;
 
 int nextpid = 1;
 extern void forkret(void);
@@ -537,6 +538,7 @@ int
 sendkill(int pid, int signum)
 {
   struct proc *p;
+  cprintf("sendkill: %d\n", signum);
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){
@@ -548,8 +550,19 @@ sendkill(int pid, int signum)
         p->psignals[signum] = 1; //For other signals
       }
       release(&ptable.lock);
-      if (p->state == SLEEPING && p->killed != 1){
-        handle_signal(p, signum);
+      cprintf("paused = %d\n", paused);
+      if (p->state == SLEEPING){
+        if(paused == 1 && (signum == SIGTERM || signum == SIGINT || signum == SIGKILL)){
+          // For processes which are SLEEPING by pause()
+          paused = 0;
+          handle_signal(p, SIGCONT);
+          // Continue the process (to return -1) only when Terminate signals given
+        }
+        else if (paused == 0 && p->killed != 1){
+          // For Stopped process
+          handle_signal(p, signum);
+        }
+     
       }
       return 0;
     }
@@ -558,6 +571,16 @@ sendkill(int pid, int signum)
   return -1;
 }
 
+int
+pause()
+{
+  paused = 1;
+  cprintf("pause: Going to sleep\n");
+  acquire(&q.lock);
+  sleep(p, &q.lock);
+  release(&q.lock);
+  return -1;
+}
 
 int 
 signal(int signum, sighandler_t handler)
@@ -659,7 +682,7 @@ handle_signal(struct proc *curproc, int i)
       case SIGUSR1:
       case SIGUSR2:
       case SIGVTALRM:
-        term_handler();
+        term_handler(curproc);
         break;
       case SIGCHLD:
       case SIGURG:
@@ -699,17 +722,20 @@ check_pending_signal(void)
 
 }
 
-void term_handler()
+void term_handler(struct proc *argp)
 {
   cprintf("in term handler\n");
-  struct proc *p = myproc();
+  struct proc *p = argp;
   acquire(&ptable.lock);
+  if(p->state == SLEEPING){
+    p->state = RUNNABLE;
+  }
   p->killed = 1;
-  // sched();
 
   // Terminate the process
   release(&ptable.lock);
 }
+
 
 void 
 cont_handler()

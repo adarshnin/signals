@@ -25,6 +25,7 @@ int sleep(int);
 int uptime(void);
 int sendkill(int, int);
 int signal(int, void(*)(int));
+int pause(void);
 
 // ulib.c
 int stat(const char*, struct stat*);

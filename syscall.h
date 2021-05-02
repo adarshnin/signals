@@ -23,3 +23,4 @@
 #define SYS_sendkill  22
 #define SYS_signal  23
 #define SYS_sigret 24
+#define SYS_pause 24

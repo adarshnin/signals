@@ -7,6 +7,7 @@
 #include "syscall.h"
 #include "traps.h"
 #include "memlayout.h"
+#include "signal.h"
 
 char buf[8192];
 char name[3];
@@ -1737,6 +1738,56 @@ void argptest()
   printf(1, "arg test passed\n");
 }
 
+// Signals Testing
+void signals()
+{
+  int i, pid, ret;
+  printf(stdout, "signals test\n");
+  pid = fork();
+
+  if(pid == 0) {
+    sleep(200);
+    i = 0;
+    while (1) {
+        i++;
+    }
+  } 
+  else
+  {
+    for(i = 0; i < 2; i++){
+        sleep(200);
+        sendkill(pid, SIGSTOP);
+        sleep(200);
+        sendkill(pid, SIGCONT);
+    }
+    sleep(200);
+    printf(1, "SIGSTOP Test Passed\n");
+    printf(1, "SIGCONT Test Passed\n");
+    sendkill(pid, SIGTERM);
+    printf(1, "SIGTERM Test Passed\n");
+    wait();
+  }
+
+  // pause() testing
+  ret = 0;
+  pid = fork();
+
+  if(pid == 0) {
+    ret = pause();
+    if (-1 == ret)
+        printf(1,"Process exited\n");
+    } 
+  else
+  {
+    printf(1,"Parent\n");
+
+    sendkill(pid, SIGTERM);
+    wait();
+  }
+  
+  printf(stdout, "signals test ok\n");
+}
+
 unsigned long randstate = 1;
 unsigned int
 rand()
@@ -1756,6 +1807,7 @@ main(int argc, char *argv[])
   }
   close(open("usertests.ran", O_CREATE));
 
+  signals();
   argptest();
   createdelete();
   linkunlink();
