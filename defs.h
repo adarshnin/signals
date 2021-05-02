@@ -201,6 +201,6 @@ void            clearpteu(pde_t *pgdir, char *uva);
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
 
 //sigret_syscall.S
-void execute_sigret_syscall_start(void);
-void execute_sigret_syscall_end(void);
+void 		execute_sigret_syscall_start(void);
+void 		execute_sigret_syscall_end(void);
 

@@ -593,7 +593,6 @@ sigret(void){
 void
 user_handler(struct proc *curproc, int i) 
 {
-  cprintf ("in user handler\n");
   //user stack esp
   uint ustack_esp = curproc->tf->esp;
 
@@ -602,13 +601,10 @@ user_handler(struct proc *curproc, int i)
   memmove ((void*)ustack_esp, (void*)curproc->tf, sizeof(struct trapframe));
   curproc->oldtf = (struct trapframe *)ustack_esp;
 
-  // Wrap and copy the sig_ret asm code on user stack
+  // Push the sigret_syscall.S code onto the user stack
    void *sig_ret_code_addr = (void *)execute_sigret_syscall_start;
    uint sig_ret_code_size = ((uint)&execute_sigret_syscall_end - (uint)&execute_sigret_syscall_start);
    
-   // // debug:
-   // cprintf("code size : %d\n",sig_ret_code_size);
- 
    // return addr for handler
    ustack_esp -= sig_ret_code_size;
    uint handler_ret_addr = ustack_esp;
