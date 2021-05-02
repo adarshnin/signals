@@ -11,7 +11,11 @@
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
-} ptable, q;
+} ptable;
+
+struct {
+  struct spinlock lock;
+} q;
 
 static struct proc *initproc;
 
