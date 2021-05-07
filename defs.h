@@ -1,3 +1,5 @@
+#include "signal.h"
+
 struct buf;
 struct context;
 struct file;
@@ -120,6 +122,17 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
+int             sendkill(int, int);
+int             signal(int, sighandler_t);
+void 		    check_pending_signal(void);	
+void            stop_handler();
+void            cont_handler();
+void            term_handler(struct proc*);
+void            handle_signal(struct proc*, int);
+void            user_handler(struct proc*, int);
+int 		    sigret(void);
+int 		    pause(void);
+
 
 // swtch.S
 void            swtch(struct context**, struct context*);
@@ -188,3 +201,8 @@ void            clearpteu(pde_t *pgdir, char *uva);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
+
+//sigret_syscall.S
+void 		execute_sigret_syscall_start(void);
+void 		execute_sigret_syscall_end(void);
+

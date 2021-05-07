@@ -6,6 +6,7 @@
 #include "defs.h"
 #include "x86.h"
 #include "elf.h"
+#include "signal.h"
 
 int
 exec(char *path, char **argv)
@@ -99,6 +100,14 @@ exec(char *path, char **argv)
   curproc->sz = sz;
   curproc->tf->eip = elf.entry;  // main
   curproc->tf->esp = sp;
+  
+  //set signal handlers to default
+  for (i = 0; i < NSIG; i++){
+    curproc->handlers[i] = SIG_DFL;
+  }
+
+  
+
   switchuvm(curproc);
   freevm(oldpgdir);
   return 0;
@@ -112,3 +121,4 @@ exec(char *path, char **argv)
   }
   return -1;
 }
+

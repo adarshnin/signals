@@ -6,13 +6,29 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "signal.h"
 
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
 } ptable;
 
+struct {
+  struct spinlock lock;
+  struct spinlock siglock;
+} q;
+
 static struct proc *initproc;
+
+struct proc test;
+
+// struct q {
+//     void *ptr;
+//     struct spinlock lock;
+// };
+
+void *p;
+int paused = 0;
 
 int nextpid = 1;
 extern void forkret(void);
@@ -75,6 +91,7 @@ allocproc(void)
 {
   struct proc *p;
   char *sp;
+  int i;
 
   acquire(&ptable.lock);
 
@@ -112,6 +129,10 @@ found:
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
 
+  //clear pending signals
+  for (i = 0; i < NSIG; i++){
+    p->psignals[i] = 0; 
+  }
   return p;
 }
 
@@ -208,6 +229,13 @@ fork(void)
       np->ofile[i] = filedup(curproc->ofile[i]);
   np->cwd = idup(curproc->cwd);
 
+
+  //copy signal handlers from the parent
+  for (i = 0; i < NSIG; i++){
+    np->handlers[i] = curproc->handlers[i]; 
+  }
+
+
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
 
   pid = np->pid;
@@ -220,6 +248,21 @@ fork(void)
 
   return pid;
 }
+
+//int terminate_handler(struct proc *curproc){
+//  curproc->state = ZOMBIE;
+//  // Already killed? or to be killed??
+//  curproc->killed = 1; 
+//}
+//
+
+
+
+//
+//int term_core_handler(struct proc *curproc){
+//  curproc->state = RUNNABLE;
+//  // Terminate the process and produce core dump
+//}
 
 // Exit the current process.  Does not return.
 // An exited process remains in the zombie state
@@ -495,6 +538,225 @@ kill(int pid)
   release(&ptable.lock);
   return -1;
 }
+
+int
+sendkill(int pid, int signum)
+{
+  struct proc *p;
+  acquire(&ptable.lock);
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->pid == pid){
+      if(signum == SIGKILL){
+        p->killed = 1;
+      }
+      else{
+        
+        p->psignals[signum] = 1; //For other signals
+      }
+      release(&ptable.lock);
+      if (p->state == SLEEPING){
+        if(paused == 1 && (signum == SIGTERM || signum == SIGINT || signum == SIGKILL)){
+          // For processes which are SLEEPING by pause()
+          paused = 0;
+          handle_signal(p, SIGCONT);
+          // Continue the process (to return -1) only when Terminate signals given
+        }
+        else if (paused == 0 && p->killed != 1){
+          // For Stopped process
+          handle_signal(p, signum);
+        }
+     
+      }
+      return 0;
+    }
+  }
+  release(&ptable.lock);
+  return -1;
+}
+
+int
+pause()
+{
+  paused = 1;
+  acquire(&q.lock);
+  sleep(p, &q.lock);
+  release(&q.lock);
+  return -1;
+}
+
+int 
+signal(int signum, sighandler_t handler)
+{
+  //can't set up uesr handler for SIGSTOP and SIGKILL 
+  if (signum == SIGSTOP || signum == SIGKILL){
+	  return -1;
+  }
+  struct proc *curproc = myproc();
+  //some checking for SIGSTOP and SIGKILL is needed
+  //
+  acquire(&q.siglock);
+  curproc->handlers[signum] = handler;
+  release(&q.siglock);
+  return 0;
+}
+
+//sigret function
+int
+sigret(void){
+  struct proc *curproc = myproc();
+
+  //restore the oldtrapframe
+  memmove((void *)curproc->tf, (void *)curproc->oldtf, sizeof(struct trapframe));
+  return 0;
+}
+
+
+//http://courses.cms.caltech.edu/cs124/lectures-wi2016/CS124Lec15.pdf
+void
+user_handler(struct proc *curproc, int i) 
+{
+  //user stack esp
+  uint ustack_esp = curproc->tf->esp;
+
+  //save the current trapframe from kernel stack to user stack
+  ustack_esp -= sizeof(struct trapframe);
+  memmove ((void*)ustack_esp, (void*)curproc->tf, sizeof(struct trapframe));
+  curproc->oldtf = (struct trapframe *)ustack_esp;
+
+  // Push the sigret_syscall.S code onto the user stack
+   void *sig_ret_code_addr = (void *)execute_sigret_syscall_start;
+   uint sig_ret_code_size = ((uint)&execute_sigret_syscall_end - (uint)&execute_sigret_syscall_start);
+   
+   // return addr for handler
+   ustack_esp -= sig_ret_code_size;
+   uint handler_ret_addr = ustack_esp;
+   memmove((void *)ustack_esp, sig_ret_code_addr, sig_ret_code_size);
+
+  //push the signal number
+  ustack_esp -= sizeof(uint);
+  *((uint *)ustack_esp) = i;
+
+  //push the return address of sigret function
+  ustack_esp -= sizeof(uint);
+  memmove((void*)ustack_esp, (void*)&handler_ret_addr, sizeof(uint));
+  //*((uint *)(ustack_esp)) = (uint)sigret;
+  //curproc->tf->eax = 24;
+  //curproc->tf->trapno = 64;
+  //memmove((void*)ustack_esp, (void*)&trap, sizeof(uint));
+
+  //change the esp stored in tf
+  curproc->tf->esp = ustack_esp;
+
+  //now change the eip to point to the user handler
+  curproc->tf->eip = (uint)curproc->handlers[i];
+
+  return; 
+}
+
+
+
+
+void 
+handle_signal(struct proc *curproc, int i)
+{
+  if (curproc->handlers[i] == SIG_IGN)
+    return;
+
+  else if (curproc->handlers[i] == SIG_DFL){
+    switch(i){
+      case SIGSTOP:
+      case SIGTSTP:
+      case SIGTTIN:
+      case SIGTTOU:
+        stop_handler();
+        break;
+      case SIGCONT:
+        cont_handler();
+        break;
+      case SIGTERM:
+      case SIGINT:
+      case SIGALRM:
+      case SIGHUP:
+      case SIGIO:
+      case SIGPIPE:
+      case SIGPROF:
+      case SIGPWR:
+      case SIGSTKFLT:
+      case SIGUSR1:
+      case SIGUSR2:
+      case SIGVTALRM:
+        term_handler(curproc);
+        break;
+      case SIGCHLD:
+      case SIGURG:
+      case SIGWINCH:
+      // Doubt - ignore handler()
+        break;
+      default:
+        break;
+    }
+  }
+
+  else{
+    user_handler(curproc, i);
+    //curproc->tf->eip = (uint)curproc->handlers[i];
+  }
+
+  //clear the pending signal flag
+  acquire(&q.siglock);
+  curproc->psignals[i] = 0;
+  release(&q.siglock);
+  
+}
+
+void 
+check_pending_signal(void) 
+{
+  struct proc *curproc = myproc();
+  int i;
+
+  //check pending signals
+  for(i = 0; i < NSIG; i++){
+    if (curproc->psignals[i])
+      break;
+  }
+  if(i == NSIG)
+    return;
+
+  handle_signal(curproc, i);
+
+}
+
+void term_handler(struct proc *argp)
+{
+  struct proc *p = argp;
+  acquire(&ptable.lock);
+    p->killed = 1;
+  if(p->state == SLEEPING){
+    p->state = RUNNABLE;
+  }
+  // Terminate the process
+  release(&ptable.lock);
+}
+
+
+void 
+cont_handler()
+{
+  acquire(&q.lock);
+  wakeup(p);
+ // Continue the process
+  release(&q.lock);
+}
+
+void 
+stop_handler(){
+  acquire(&q.lock);
+  sleep(p, &q.lock);
+  // Stop the process
+  release(&q.lock);
+}
+
 
 //PAGEBREAK: 36
 // Print a process listing to console.  For debugging.

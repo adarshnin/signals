@@ -1,0 +1,10 @@
+Workflow
+
+Tasks done:
+I) Adding system call to xv6
+    i) Added testkill to test our system call "sendkill"
+    ii)Then added wrapper function for the systemcall "sendkill" -> sendkill()
+    iii)
+
+Resources:
+1> https://stackoverflow.com/questions/27068394/how-to-pass-a-value-into-a-system-call-function-in-xv6
